@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.DS_Store
+.idea/
+.vscode/
+
+# Examples can be re-built; users may not want the generated HTML tracked.
+# examples/dashboard.html
