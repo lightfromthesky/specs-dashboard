@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TodoApp specs</title>
+<style>
+  :root {
+    --bg: #f7f8fa;
+    --panel: #ffffff;
+    --border: #e3e6eb;
+    --text: #16181d;
+    --muted: #6b7280;
+    --accent: #2563eb;
+    --row-hover: #f0f4ff;
+    --chip-bg: #eef2f7;
+    --chip-active-bg: #2563eb;
+    --chip-active-fg: #ffffff;
+    --status-shipped: #10b981;
+    --status-in-progress: #f59e0b;
+    --status-draft: #6b7280;
+    --status-planned: #0ea5e9;
+    --status-closed: #6366f1;
+    --status-abandoned: #ef4444;
+    --status-superseded: #8b5cf6;
+    --status-unknown: #9ca3af;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  header {
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 40px;
+  }
+  header h1 {
+    margin: 0 0 4px 0;
+    font-size: 18px;
+    font-weight: 600;
+  }
+  header .meta {
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 12px 40px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .chip {
+    cursor: pointer;
+    padding: 4px 12px;
+    border-radius: 16px;
+    background: var(--chip-bg);
+    color: var(--text);
+    font-size: 12px;
+    user-select: none;
+    transition: background 0.1s;
+  }
+  .chip:hover { background: #dde4ee; }
+  .chip.active {
+    background: var(--chip-active-bg);
+    color: var(--chip-active-fg);
+  }
+  .chip .n { opacity: 0.6; margin-left: 4px; }
+  .chip.active .n { opacity: 0.8; }
+  input[type=search] {
+    flex: 1;
+    min-width: 200px;
+    max-width: 320px;
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font: inherit;
+    margin-left: auto;
+  }
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(300px, 1fr) minmax(400px, 2fr);
+    gap: 0;
+    height: calc(100vh - 100px);
+  }
+  .list-pane {
+    overflow-y: auto;
+    border-right: 1px solid var(--border);
+    background: var(--panel);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  th, td {
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  th:first-child, td:first-child { padding-left: 40px; }
+  th:last-child, td:last-child { padding-right: 40px; }
+  th {
+    position: sticky;
+    top: 0;
+    background: var(--panel);
+    z-index: 1;
+    cursor: pointer;
+    user-select: none;
+    font-weight: 600;
+  }
+  th:hover { background: #f0f4ff; }
+  tbody tr { cursor: pointer; }
+  tbody tr:hover { background: var(--row-hover); }
+  tbody tr.selected { background: #dbe6ff; }
+  .status-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    color: white;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .status-Shipped { background: var(--status-shipped); }
+  .status-Inprogress { background: var(--status-in-progress); }
+  .status-Draft { background: var(--status-draft); }
+  .status-Planned { background: var(--status-planned); }
+  .status-Closed { background: var(--status-closed); }
+  .status-Abandoned { background: var(--status-abandoned); }
+  .status-Superseded { background: var(--status-superseded); }
+  .status-Unknown { background: var(--status-unknown); }
+  .reader-pane {
+    overflow-y: auto;
+    padding: 24px 40px;
+    background: var(--panel);
+  }
+  .reader-pane .placeholder {
+    color: var(--muted);
+    text-align: center;
+    margin-top: 80px;
+  }
+  .velocity-section {
+    margin: 120px 0 0;
+    text-align: left;
+  }
+  .velocity-heading {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    margin-bottom: 12px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--border);
+  }
+  .velocity-chart {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+  }
+  .velocity-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    min-width: 0;
+  }
+  .velocity-count {
+    font-size: 12px;
+    color: var(--text);
+    text-align: center;
+    height: 18px;
+    line-height: 18px;
+    font-weight: 500;
+  }
+  .velocity-stem {
+    display: flex;
+    align-items: flex-end;
+    height: 240px;
+  }
+  .velocity-fill {
+    width: 100%;
+    background: var(--status-shipped);
+    border-radius: 2px 2px 0 0;
+    min-height: 1px;
+  }
+  .velocity-col[data-empty="1"] .velocity-fill { background: var(--border); }
+  .velocity-label {
+    font-size: 11px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 6px;
+    white-space: nowrap;
+  }
+  .reader-pane h1, .reader-pane h2, .reader-pane h3, .reader-pane h4 {
+    margin-top: 1.4em;
+    margin-bottom: 0.4em;
+    font-weight: 600;
+  }
+  .reader-pane h1 { font-size: 22px; }
+  .reader-pane h2 { font-size: 18px; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
+  .reader-pane h3 { font-size: 15px; }
+  .reader-pane code {
+    background: #f0f2f5;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-size: 12px;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+  }
+  .reader-pane pre {
+    background: #f6f8fa;
+    padding: 12px;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12px;
+  }
+  .reader-pane pre code { background: none; padding: 0; }
+  .reader-pane table { margin: 8px 0; }
+  .reader-pane th, .reader-pane td { border: 1px solid var(--border); }
+  .reader-pane blockquote {
+    border-left: 3px solid var(--border);
+    margin-left: 0;
+    padding-left: 12px;
+    color: var(--muted);
+  }
+  .reader-pane a { color: var(--accent); text-decoration: none; }
+  .reader-pane a:hover { text-decoration: underline; }
+  .reader-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+  .reader-header .file {
+    color: var(--muted);
+    font-size: 12px;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+  }
+  .empty-row {
+    color: var(--muted);
+    text-align: center;
+    padding: 40px 0;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>TodoApp specs</h1>
+  <div class="meta">
+    <span id="meta-total"></span>
+    · from <code>/Users/vidyayedla/SourceControl/repos/specs-dashboard/example/docs/specs</code>
+    · generated <span id="meta-gen">2026-05-24T08:26:45Z</span>
+  </div>
+</header>
+
+<div class="controls">
+  <span class="chip active" data-bucket="">All<span class="n" id="n-all"></span></span>
+  <span class="chip" data-bucket="Shipped">Shipped<span class="n" id="n-Shipped"></span></span>
+  <span class="chip" data-bucket="In progress">In progress<span class="n" id="n-Inprogress"></span></span>
+  <span class="chip" data-bucket="Draft">Draft<span class="n" id="n-Draft"></span></span>
+  <span class="chip" data-bucket="Planned">Planned<span class="n" id="n-Planned"></span></span>
+  <span class="chip" data-bucket="Closed">Closed<span class="n" id="n-Closed"></span></span>
+  <span class="chip" data-bucket="Abandoned">Abandoned<span class="n" id="n-Abandoned"></span></span>
+  <span class="chip" data-bucket="Superseded">Superseded<span class="n" id="n-Superseded"></span></span>
+  <span class="chip" data-bucket="Unknown">Unknown<span class="n" id="n-Unknown"></span></span>
+  <input id="search" type="search" placeholder="Filter by title…" autocomplete="off">
+</div>
+
+<div class="layout">
+  <div class="list-pane">
+    <table>
+      <thead>
+        <tr>
+          <th data-sort="title">Spec</th>
+          <th data-sort="bucket">Status</th>
+          <th data-sort="date">Date</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+  <div class="reader-pane">
+    <div id="reader" class="placeholder">
+      <div>📄 Pick a spec to read it here.</div>
+      <div class="velocity-section">
+        <div class="velocity-heading">Shipping velocity</div>
+        <div id="velocity-chart" class="velocity-chart"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script id="specs-data" type="application/json">[{"filename":"bulk-csv-import.md","title":"Bulk import from CSV","raw_status":"Shipped 2025-11-12","bucket":"Shipped","date":"2025-11-12","body":"# Bulk import from CSV\n\n**Status:** Shipped 2025-11-12\n\n## Problem\n\nNew users migrating from other todo apps (Todoist, TickTick, Things) consistently bounce when they realize they'd have to re-enter every existing todo by hand. Onboarding friction is the #1 reason for sign-up-without-second-visit churn (analytics: 41% of new accounts never add a second todo).\n\n## Solution\n\nA CSV import flow accessible from Settings \u2192 Data \u2192 Import:\n\n1. User uploads a CSV\n2. Frontend previews the first 10 rows + lets the user map columns to fields (title, body, due_date, completed, category)\n3. Server validates the full file, returns `{ valid_rows: N, errors: [{row, message}] }`\n4. User clicks Confirm \u2192 server creates todos in a transaction\n5. On success, user sees their newly-imported todos appear in the timeline\n\nImport is idempotent on a per-file basis: the same CSV uploaded twice creates each todo once (deduped on `(user_id, title, body, due_date)` hash).\n\n## Implementation\n\n- [x] Backend: `POST /api/import/csv` accepting multipart upload \u2014 [#7](https://example.com/pull/7)\n- [x] CSV parsing + column mapping endpoint \u2014 [#9](https://example.com/pull/9)\n- [x] Transactional batch insert with dedup \u2014 [#11](https://example.com/pull/11)\n- [x] Frontend upload + preview + mapping UI \u2014 [#13](https://example.com/pull/13)\n- [x] Pre-canned column mappings for Todoist / TickTick / Things export formats \u2014 [#17](https://example.com/pull/17)\n\n## Risks & rollback\n\nLarge CSVs (10K+ rows) could OOM the server. Mitigation: 5MB upload limit + chunked processing. Rollback is a feature-flag flip.\n"},{"filename":"calendar-integration.md","title":"Calendar integration (iCal export + Google Calendar sync)","raw_status":"Draft","bucket":"Draft","date":"","body":"# Calendar integration (iCal export + Google Calendar sync)\n\n**Status:** Draft\n\n## Problem\n\nUsers who live in Google Calendar / Apple Calendar / Outlook want their todos with due dates to show up alongside their meetings. Today they have to set a separate phone reminder for every due date \u2014 annoying enough that several have asked for this.\n\n## Solution (proposal)\n\nTwo phases:\n\n### Phase 1 \u2014 one-way iCal export (read-only feed)\n\nEach user gets a private iCal URL: `https://api.todoapp.example/cal/\u003cuser_id>/\u003ctoken>.ics`. Calendar apps subscribe to it; the server returns a VEVENT per todo-with-due-date:\n\n```\nBEGIN:VEVENT\nUID:todo-\u003cid>@todoapp.example\nDTSTART;VALUE=DATE:\u003cdue_date>\nSUMMARY:\u003ctitle>\nDESCRIPTION:\u003cbody \u2014 first 200 chars>\nEND:VEVENT\n```\n\nCalendar apps poll the URL on their own cadence (Apple is ~hourly, Google is ~daily). Read-only, no API integration with the calendar provider needed.\n\n### Phase 2 \u2014 two-way Google Calendar sync (OAuth-based)\n\nUser connects their Google Calendar via OAuth. Todos with due dates become Calendar events; checking off the calendar event marks the todo done. Bigger surface \u2014 OAuth token refresh, conflict resolution, webhook handling.\n\n## Implementation\n\n- [ ] Phase 1: token-signed iCal endpoint + RFC 5545-compliant VEVENT generation\n- [ ] Phase 1: Settings page with \"Subscribe to calendar\" button (copies the user's iCal URL)\n- [ ] Phase 1: integration tests against the iCal validator\n- [ ] Phase 2: Google OAuth app + token refresh handling (deferred until Phase 1 ships and we see uptake)\n\n## Open questions\n\n- Should completed todos disappear from the calendar feed or stay as past-dated events? Lean disappear \u2014 calendar should reflect \"what's still pending.\"\n- Subscription URL leakage. The token is per-user and revocable from Settings. Audit logs if a token is rotated.\n\nPhase 1 is small (~3 days of work). Not started \u2014 waiting on a clear \"yes, build this\" signal from a few more user requests.\n"},{"filename":"collaborative-editing.md","title":"Collaborative todo lists (multi-user)","raw_status":"Draft","bucket":"Draft","date":"","body":"# Collaborative todo lists (multi-user)\n\n**Status:** Draft\n\n## Problem\n\nSeveral users have asked for shared lists \u2014 \"Groceries\", \"House Projects\" \u2014 where multiple people can add/check todos. Currently every account is solo; sharing means screenshotting a list to a partner.\n\n## Solution (proposal)\n\nTwo new concepts:\n\n1. **`Workspace`** \u2014 a named container of todos that one or more users have access to.\n2. **`Membership`** \u2014 links a user to a workspace with a role (`owner` / `editor` / `viewer`).\n\nThe existing solo experience is preserved by giving every user a \"Personal\" workspace at signup.\n\nSharing flow:\n\n- Owner clicks \"Share list\" \u2192 enters an email\n- If the email matches an existing user \u2192 send invite notification\n- If not \u2192 send a sign-up + invite combined link\n- Invitee accepts \u2192 joins the workspace with the offered role\n\nReal-time sync (already in flight in `realtime-sync.md`) is a prerequisite \u2014 collaborative edits without real-time updates would be frustrating.\n\n## Implementation\n\n- [ ] Migration: `workspaces`, `memberships` tables; backfill every user's todos into a \"Personal\" workspace\n- [ ] API: scope all `/api/todos` endpoints by workspace; add `/api/workspaces` CRUD\n- [ ] Invite + accept flow + email templates\n- [ ] Frontend: workspace switcher in the sidebar\n- [ ] Permission UI: per-membership role chip with role-change controls for owners\n\n## Open questions\n\n- Conflict resolution for simultaneous edits to the same todo. Last-write-wins is the simplest answer; matches Google Docs' offline-edit semantics. Operational transform / CRDT is overkill at this scale.\n- Whether viewers can comment (without checking). Adds a `comments` table \u2014 deferred until v2 unless users specifically ask.\n\nNot started \u2014 waiting on `realtime-sync.md` to ship first.\n"},{"filename":"dark-mode.md","title":"Dark mode","raw_status":"Closed 2026-01-08","bucket":"Closed","date":"2026-01-08","body":"# Dark mode\n\n**Status:** Closed 2026-01-08\n\n## Problem\n\nUsers on the feedback form: \"Why is the app blindingly white at 11pm.\" Fair point. The competitor that everyone defected from had dark mode; we don't.\n\n## Solution\n\nDetect `prefers-color-scheme: dark` on the OS level and swap to a dark palette. Add a manual override toggle in Settings for users whose OS preference doesn't match their app preference.\n\nA minimum two-palette set:\n\n- Light (current default)\n- Dark \u2014 `#1a1a1a` background, `#e8e8e8` text, `#4a9eff` accent\n\n## Implementation\n\n- [x] Initial implementation \u2014 CSS variables + JS toggle + Settings UI \u2014 [#22](https://example.com/pull/22), commit `c8f9a2b`\n- [x] **Reverted** \u2014 feature rolled back two weeks after launch \u2014 [#31](https://example.com/pull/31), commit `7d3e1f4`\n\n## Why it was reverted\n\nTwo weeks of post-launch data:\n\n- **Contrast bugs throughout the app.** The \"completed\" strikethrough on todos was nearly invisible in dark mode (light gray on dark gray, ~2.1:1 contrast \u2014 WCAG fails AA at 4.5:1). Reported by 14% of dark-mode users.\n- **Color-coded categories broke.** The 8 category colors were tuned for white backgrounds; on dark, half of them looked like the same muddy red-brown.\n- **Date-picker library hard-coded white.** The third-party date-picker doesn't respect CSS variables; opening it on dark mode was a jarring white flash.\n\nThe right fix is a full design pass on the dark palette + replacing the date-picker. That's bigger than the original spec scoped for. Closing this spec as history; a future \"design-system v2\" effort will pick the dark-mode work back up properly.\n"},{"filename":"due-date-field.md","title":"Add `due_date` field to todos","raw_status":"Shipped 2026-04-05","bucket":"Shipped","date":"2026-04-05","body":"# Add `due_date` field to todos\n\n**Status:** Shipped 2026-04-05\n\n## Problem\n\nThe most-requested feature on the feedback form (62 mentions in the last 90 days): due dates on individual todos. Currently users hack this by typing dates into the body (\"Pay rent by April 5\") which the app can't sort by or remind on.\n\n## Solution\n\nAdd a `due_date: TIMESTAMPTZ NULL` column to `todos`. Frontend exposes a date-picker on each row. Backend supports:\n\n- `GET /api/todos?due_before=YYYY-MM-DD`\n- `GET /api/todos?overdue=true` (todos with `due_date \u003c now()` and not completed)\n- Sort by due date\n\nA \"Due Soon\" smart list (next 7 days) appears on the home screen.\n\n## Implementation\n\n- [x] Migration: `ALTER TABLE todos ADD COLUMN due_date TIMESTAMPTZ` \u2014 [#68](https://example.com/pull/68)\n- [x] API query params + serializer \u2014 [#71](https://example.com/pull/71)\n- [x] Frontend date-picker on todo row \u2014 [#74](https://example.com/pull/74)\n- [x] Home-screen \"Due Soon\" widget \u2014 [#77](https://example.com/pull/77)\n\n## Out of scope\n\nRecurring due dates (\"every Tuesday\"). Tracked separately as a future spec \u2014 the data model needs more thought.\n"},{"filename":"full-text-search.md","title":"Full-text search across todos","raw_status":"In progress","bucket":"In progress","date":"","body":"# Full-text search across todos\n\n**Status:** In progress\n\n## Problem\n\nThe current search box only matches todo titles \u2014 substring `LIKE '%foo%'`. Users have hundreds of todos accumulated over months; finding \"that thing I wrote about the dentist last spring\" requires scrolling timeline-style.\n\nBodies are searched today, but slowly: every body is `TEXT`, queried with `LIKE`, full table scan. On the median account it's fast enough; on heavy users (5000+ todos) it takes 1.5\u20133 seconds.\n\n## Solution\n\nPostgres full-text search. Add a `search_tsv tsvector` column derived from `title || ' ' || body`, with a GIN index. Search endpoint accepts a free-text query, returns ranked results.\n\n```sql\nALTER TABLE todos ADD COLUMN search_tsv tsvector\n  GENERATED ALWAYS AS (to_tsvector('english', coalesce(title, '') || ' ' || coalesce(body, ''))) STORED;\nCREATE INDEX todos_search_idx ON todos USING GIN(search_tsv);\n```\n\nAPI:\n\n- `GET /api/todos/search?q=dentist+spring` \u2192 `to_tsquery`, rank by `ts_rank` \u00d7 recency boost\n- Returns 50 results, paginated\n\nFrontend: replace the title-only filter with a unified search box that hits this endpoint after a 200ms debounce.\n\n## Implementation\n\n- [x] Migration + GIN index \u2014 [#161](https://example.com/pull/161)\n- [x] `/api/todos/search` endpoint with ranking \u2014 [#164](https://example.com/pull/164)\n- [ ] Frontend debounced search input + result rendering\n- [ ] Highlighted matches in the result list (server-side `ts_headline`)\n- [ ] Search analytics \u2014 log queries (no PII) to find common patterns we should pre-index\n\n## Open questions\n\n- Whether to support per-language stemming (some users mix Spanish/English in todos). `to_tsvector('simple', \u2026)` avoids stemming entirely. Will pick after looking at the query log post-launch.\n"},{"filename":"graphql-layer.md","title":"GraphQL API layer","raw_status":"Abandoned 2025-12-19","bucket":"Abandoned","date":"2025-12-19","body":"# GraphQL API layer\n\n**Status:** Abandoned 2025-12-19\n\n## Problem\n\n(From the original 2025-09 draft.) The REST API has the typical over/under-fetch problems on the mobile client \u2014 the todos list endpoint returns 12 fields per row when the list view only renders 4. A GraphQL layer would let the client ask for exactly what it needs and stop the bandwidth waste.\n\n## Solution (original proposal)\n\nStand up a GraphQL gateway in front of the existing REST controllers. Use [Mercurius](https://mercurius.dev/) (Node) since the backend is already Node + Fastify. Schema mirrors the REST resources; resolvers proxy to the existing controllers initially, then migrate to direct DB queries case-by-case.\n\n## Implementation status\n\nA spike PR ([#54](https://example.com/pull/54), closed-without-merge) stood up the gateway and exposed `query { todos { id title completed } }`. Worked fine in isolation.\n\n## Why this is Abandoned\n\nAfter the spike and a week of usage on the mobile client:\n\n1. **Bandwidth wasn't actually the bottleneck.** Profiling showed the mobile client's slowness was due to a render-blocking JS bundle, not API payload size. Trimming the JSON shaved 12% off response body but didn't move user-perceived load time at all.\n2. **Two API surfaces means double the auth, double the caching, double the test surface.** The cost of maintaining GraphQL + REST in parallel was real and ongoing.\n3. **The escape hatch was simpler.** Adding `?fields=id,title,completed` to the REST endpoints (5 lines of serializer code) solved 90% of the over-fetch problem with zero new infrastructure.\n\nClosing the spec as history. If we ever revisit (e.g., for a public partner API where typed schemas are a real win), this is the prior art.\n"},{"filename":"ios-native-app.md","title":"iOS native app","raw_status":"Planned","bucket":"Planned","date":"","body":"# iOS native app\n\n**Status:** Planned\n\n## Problem\n\nUsers have been asking for a real iOS app since launch. The PWA works but\nsuffers from the usual web-on-mobile issues: home-screen-icon flakiness,\nno offline-first behavior, no haptic feedback, no share-sheet integration\nwith system apps (Reminders, Calendar, Files).\n\nLast quarter's user survey put a native iOS app at the top of the wishlist\n(53% of respondents). The team has committed to building it in Q3, after\nthe realtime-sync work lands (see `realtime-sync.md`).\n\n## Solution\n\nNative Swift app using:\n\n- SwiftUI for the entire UI surface (matching the design system that landed\n  with dark mode, plus a few iOS-specific affordances like swipe actions\n  and pull-to-refresh).\n- The existing REST API (no new endpoints; we deliberately kept the API\n  contract clean enough to support multiple clients).\n- A local SQLite cache via GRDB for offline-first reads + queued writes;\n  syncs through the same `/api/todos/sync` cursor that the realtime-sync\n  spec is shipping.\n- App Store distribution; TestFlight beta first.\n\n## Implementation\n\nSequenced after realtime-sync ships. Tentative milestones:\n\n- Q3 W1-2: read-only client (lists, todos, mark-complete)\n- Q3 W3-4: write path + offline queue\n- Q3 W5-6: share extension + widgets\n- Q3 W7: TestFlight beta with 50 invited users\n- Q3 W8: App Store submission\n\nNo code committed yet. Spec is here so the team can refine the design while\nrealtime-sync is in flight.\n"},{"filename":"jwt-bearer-auth.md","title":"JWT bearer token authentication","raw_status":"Shipped 2026-02-14","bucket":"Shipped","date":"2026-02-14","body":"# JWT bearer token authentication\n\n**Status:** Shipped 2026-02-14\n\n## Problem\n\nThe original auth design (see `session-cookie-auth.md`) used server-side session storage. As the architecture firmed up around a horizontally-scaling stateless API + a separate mobile client, server-side sessions stopped fitting:\n\n- Every authenticated request had to load a session row from the DB. Either we pin to a shared DB (latency on every request) or implement sticky sessions (operationally annoying).\n- The mobile client uses `Authorization: Bearer` natively. Cookie-based sessions on web + Bearer on mobile means two auth code paths.\n\n## Solution\n\nIssue a signed JWT on login. The token is the session \u2014 server-side state holds nothing per logged-in user, just a `revoked_tokens` set for forced logout.\n\nToken shape (15-minute access + 7-day refresh):\n\n```json\n{\n  \"sub\": \"user-uuid\",\n  \"iat\": 1234567890,\n  \"exp\": 1234568790,\n  \"type\": \"access\"\n}\n```\n\nBoth clients send `Authorization: Bearer \u003cjwt>` on every request. Web also stores in an `httpOnly` cookie (XSS-resistant); the cookie is read on the server side and forwarded as `Authorization` to upstream services. Mobile stores in the platform's secure-storage API (Keychain on iOS, Keystore on Android).\n\n## Implementation\n\n- [x] JWT mint + verify on the auth service \u2014 [#33](https://example.com/pull/33)\n- [x] Web cookie-set on login + auth middleware reads from `req.cookies` \u2014 [#35](https://example.com/pull/35)\n- [x] Mobile secure-storage adapter (RN bridge) \u2014 [#37](https://example.com/pull/37)\n- [x] Revoke-on-logout via Redis token blacklist \u2014 [#39](https://example.com/pull/39)\n\n## Risks & rollback\n\nJWT secret rotation needs a planned procedure (key versioning in the token header). Documented in `runbooks/jwt-secret-rotation.md`. Rollback to session cookies is possible but would require a multi-day re-issue window for active users.\n"},{"filename":"postgres-migration.md","title":"SQLite \u2192 Postgres migration","raw_status":"Shipped 2026-03-22","bucket":"Shipped","date":"2026-03-22","body":"# SQLite \u2192 Postgres migration\n\n**Status:** Shipped 2026-03-22\n\n## Problem\n\nThe TodoApp launched on SQLite for simplicity. Three issues now blocking growth:\n\n- **No concurrent writes.** SQLite's whole-database lock makes the API single-threaded under write load. The sync endpoint locks up regularly under modest traffic.\n- **No JSON operators.** Stored as text, queried with `LIKE '%foo%'`. Searching todo bodies is O(n).\n- **No replication.** Backups are a `cp` of the file; no point-in-time recovery.\n\n## Solution\n\nMove to Postgres 16 on a managed provider (Fly.io's Postgres add-on). Schema is mechanical translation; the only model change is `TEXT` body columns becoming `JSONB` for richer querying.\n\nMigration plan:\n\n1. Ship Postgres-compatible queries behind a `DATABASE_URL` env var\n2. Run the existing test suite against both backends in CI\n3. Dump SQLite + load into Postgres in a maintenance window (~10 min for the current dataset)\n4. Flip `DATABASE_URL` to Postgres + redeploy\n5. Run for a week with SQLite kept warm as a fallback\n6. Drop the SQLite path\n\n## Implementation\n\n- [x] Postgres-compat schema + migrations \u2014 [#42](https://example.com/pull/42)\n- [x] CI matrix runs tests on both SQLite and Postgres \u2014 [#45](https://example.com/pull/45)\n- [x] Maintenance-window cutover \u2014 completed 2026-03-22, 7-minute downtime\n- [x] SQLite path removed two weeks post-cutover \u2014 [#52](https://example.com/pull/52)\n\n## Risks & rollback\n\nMaintenance-window dump-and-restore is the riskiest step. Rehearsed three times on staging. Rollback: revert `DATABASE_URL`, re-import any new writes from the brief Postgres window \u2014 accepted that step would require a few minutes of manual reconciliation.\n"},{"filename":"push-notifications.md","title":"Mobile push notifications","raw_status":"In progress","bucket":"In progress","date":"","body":"# Mobile push notifications\n\n**Status:** In progress\n\n## Problem\n\nUsers on the mobile app don't see due-date reminders unless the app is open. Email reminders work but are easy to miss. The competitor apps push notifications and ours doesn't.\n\n## Solution\n\niOS: APNs via Firebase Cloud Messaging. Android: FCM directly. Same code path on the server side \u2014 both abstracted behind `Notification.send(user_id, payload)`.\n\nNotification types (v1):\n\n| Trigger | Payload |\n|---|---|\n| Due date is \"today\" at the user's local 9am | \"X todos due today: \u2026\" |\n| A shared list (when collaborative-editing.md ships) gets a new item | \"Y added 'foo' to Groceries\" |\n| 2FA login from a new device | \"New login from \u003ccity>. Tap if this wasn't you.\" |\n\nToken management:\n\n- On app launch, mobile registers its device token with `POST /api/devices`\n- Server stores `(user_id, device_token, platform)` rows\n- Each notification is sent to every active device for that user\n- Dead-token responses from FCM/APNs purge the row\n\n## Implementation\n\n- [x] Server: notification table + send abstraction \u2014 [#178](https://example.com/pull/178)\n- [x] Device registration endpoint \u2014 [#180](https://example.com/pull/180)\n- [x] iOS APNs integration via FCM \u2014 [#184](https://example.com/pull/184)\n- [ ] Android FCM integration (in-flight, 70% complete)\n- [ ] Due-date reminder scheduler (cron at user's local 9am)\n- [ ] User-facing notification preferences (Settings \u2192 Notifications)\n- [ ] Telemetry: send-rate, delivery-rate, click-through-rate per type\n\n## Open questions\n\n- Quiet hours respect. Should the 9am reminder be suppressed if the user is in their declared sleep hours? Leaning yes \u2014 adds a Settings field.\n"},{"filename":"realtime-sync.md","title":"Real-time sync across devices via WebSockets","raw_status":"In progress","bucket":"In progress","date":"","body":"# Real-time sync across devices via WebSockets\n\n**Status:** In progress\n\n## Problem\n\nToday the app polls `GET /api/todos?since=\u003ccursor>` every 30 seconds when the tab is focused. That's wasteful (95% of polls return zero changes), and the 30-second lag is visible \u2014 users on phone + laptop see noticeable delay between checking a todo on one and seeing the strikethrough on the other.\n\n## Solution\n\nAdd a WebSocket endpoint that pushes mutations to all of a user's connected sessions in real time:\n\n```\nclient \u2192 connects to wss://api.todoapp.example/v1/sync?token=\u003cjwt>\nclient \u2190 server pushes { type: \"todo.updated\", todo: {...} } on every mutation by ANY of the user's sessions\n```\n\nThe polling code stays as a fallback for clients on flaky networks or in restricted environments where WebSockets are blocked.\n\nConnection lifecycle:\n\n- Auth via the same JWT used for REST calls\n- Heartbeat ping every 30s; client reconnects on missed pongs\n- Server-side: each mutation publishes to a per-user Redis pub/sub channel that all connected sessions subscribe to\n\n## Implementation\n\n- [x] WebSocket endpoint scaffolding + JWT auth \u2014 [#89](https://example.com/pull/89)\n- [x] Redis pub/sub fan-out \u2014 [#91](https://example.com/pull/91)\n- [ ] Frontend WebSocket client + reconnect logic\n- [ ] Selective polling fallback when WebSocket unavailable for 60s+\n- [ ] Telemetry: connection success rate, message-delivery latency\n\n## Open questions\n\n- How to gracefully degrade when a user has 10+ open sessions (multiple devices, browser tabs). Likely fine for now; revisit if we see real users with that pattern.\n- Whether to push the full todo object on every change or just the IDs (clients refetch). Leaning push-full for v1 to avoid the second round trip.\n"},{"filename":"recurring-todos.md","title":"Recurring todos","raw_status":"Shipped 2026-05-10","bucket":"Shipped","date":"2026-05-10","body":"# Recurring todos\n\n**Status:** Shipped 2026-05-10\n\n## Problem\n\nUsers routinely create the same todo repeatedly \u2014 \"Pay rent\" every month, \"Water the plants\" every Tuesday, \"1-on-1 prep\" every Friday. The natural request: let me create it once and have it auto-appear.\n\nThis was marked \"out of scope\" in the original `due-date-field.md` spec because the data model needed more thought. Returning to it now with a concrete design.\n\n## Solution\n\nRecurrence rules attached to a parent todo. When the parent is checked or its due date passes, the server materializes the next occurrence.\n\nData model:\n\n```sql\nALTER TABLE todos ADD COLUMN recurrence_rule TEXT;\n-- e.g. 'FREQ=WEEKLY;BYDAY=TU' or 'FREQ=MONTHLY;BYMONTHDAY=1'\n-- Uses iCalendar RRULE syntax (RFC 5545)\nALTER TABLE todos ADD COLUMN recurrence_parent_id BIGINT REFERENCES todos(id);\n```\n\nWhen a recurring todo is completed:\n\n1. Server marks the current todo `completed`\n2. Server computes the next occurrence date from the RRULE + the completion time\n3. Server inserts a new todo with the next date, copying body/category/etc., linked to the parent via `recurrence_parent_id`\n\nEditing a recurring todo offers \"Just this one\" vs \"All future occurrences\" \u2014 same UX as Google Calendar.\n\n## Implementation\n\n- [x] Migration: add the two columns \u2014 [#138](https://example.com/pull/138)\n- [x] RRULE parsing + next-occurrence calculation (using `node-rrule`) \u2014 [#141](https://example.com/pull/141)\n- [x] Materialization on completion \u2014 [#144](https://example.com/pull/144)\n- [x] Frontend: recurrence-rule picker UI (daily/weekly/monthly/custom) \u2014 [#147](https://example.com/pull/147)\n- [x] \"Just this one\" vs \"all future\" edit flow \u2014 [#150](https://example.com/pull/150)\n"},{"filename":"reminder-emails.md","title":"Reminder emails for due todos","raw_status":"Planned","bucket":"Planned","date":"","body":"# Reminder emails for due todos\n\n**Status:** Planned\n\n## Problem\n\nTodos with `due_date` set (shipped in `due-date-field.md`) currently have no\nnotification path. Users who don't open the app daily miss deadlines. The\nin-app reminder is useless if the app isn't open.\n\nPush notifications are tracked separately in `push-notifications.md` (still\nin progress) and only work on mobile. We want a cross-channel reminder that\nworks regardless of device: email.\n\n## Solution\n\nA daily cron job at 08:00 in the user's timezone (we already store it from\nthe user-registration flow) that:\n\n1. Queries todos with `due_date` in the next 24h that haven't been marked\n   complete, grouped by user.\n2. Renders an HTML email (one per user) listing the todos with deep links\n   back into the app.\n3. Sends via Postmark (already used for password reset + welcome emails).\n4. Respects an `email_reminders_enabled` setting per user, defaulting on,\n   with a one-click unsubscribe in the email footer.\n\n## Implementation\n\nDecided last sprint planning. Slotted for the sprint after `full-text-search`\nships. Estimated effort: ~3 days (mostly templating + per-user-timezone job\nscheduling; the data query is trivial).\n\nNo code committed yet.\n"},{"filename":"session-cookie-auth.md","title":"Session-cookie authentication (initial design)","raw_status":"Superseded by example/docs/specs/jwt-bearer-auth.md","bucket":"Superseded","date":"","body":"# Session-cookie authentication (initial design)\n\n**Status:** Superseded by example/docs/specs/jwt-bearer-auth.md\n\n## Problem\n\n(From the original 2025-08 draft.) The TodoApp launched anonymous-only. To support multi-device sync (see `user-registration.md`), we need authenticated sessions.\n\n## Solution (original proposal, now obsolete)\n\nServer-side session storage. On login, the server creates a `sessions` row with a random session ID, sets it as an `httpOnly` cookie, and returns 200. Subsequent requests carry the cookie automatically; middleware loads the session row from the DB and attaches the user to the request.\n\nLogout deletes the row server-side.\n\n## Why this was superseded\n\nTwo issues that surfaced as the architecture decisions firmed up:\n\n1. **Server-side session storage doesn't fit a stateless API design.** We're targeting horizontal-scale-out on the API tier; every request loading a session from DB pins us to either a shared DB or sticky sessions. JWTs avoid that entirely \u2014 the token is the session, no server-side lookup needed.\n2. **The mobile client uses pure REST + Bearer tokens.** Cookie-based sessions on web + Bearer tokens on mobile means two auth code paths. JWTs unify both.\n\n[jwt-bearer-auth.md](jwt-bearer-auth.md) takes the JWT approach: signed token returned on login, stored client-side, sent via `Authorization: Bearer` on every request. Same user-facing UX, simpler server architecture.\n\nSpec kept as history.\n"},{"filename":"tags-and-labels.md","title":"Tags and labels for todos","raw_status":"Draft","bucket":"Draft","date":"","body":"# Tags and labels for todos\n\n**Status:** Draft\n\n## Problem\n\nCategories are single-valued (one per todo) and capped at 8 system-defined options. Users want to slice their todos by ad-hoc dimensions that don't fit the rigid taxonomy: `#work`, `#waiting-on-vendor`, `#high-priority`, `#kid-school`, etc. Several have asked for \"tag-like\" labels with multi-value support and free-form text.\n\n## Solution (proposal)\n\nAdd `tags TEXT[]` to `todos`. Frontend exposes a tag-picker on each row that:\n\n- Suggests already-used tags as the user types (autocomplete from `SELECT DISTINCT unnest(tags) FROM todos WHERE user_id = ?`)\n- Accepts new tags inline\n- Lets the user filter the timeline by one or more tags\n\nTags are user-scoped \u2014 one user's `#work` doesn't appear in another user's autocomplete. Tag deletion is a per-todo concern; we don't need a separate `tags` table.\n\n## Implementation\n\n- [ ] Migration: `ALTER TABLE todos ADD COLUMN tags TEXT[] DEFAULT '{}'`\n- [ ] Backfill: nothing needed \u2014 empty array is the right starting state\n- [ ] API: tag CRUD on the todo (`PATCH /api/todos/:id { tags: [...] }`); list filter `?tags=work,urgent`\n- [ ] Autocomplete endpoint: `GET /api/tags/suggestions?prefix=wor`\n- [ ] Frontend: tag chip UI on the todo row + filter pills above the timeline\n\n## Open questions\n\n- Whether to keep system categories as-is alongside tags, or fold categories into tags as \"pinned\" tags. Leaning keep-both for v1 \u2014 categories serve a different mental model (a todo has ONE category, MANY tags).\n- Tag rename UX. If a user renames `#work` \u2192 `#office`, do we update every existing todo? Or treat them as independent? Probably independent \u2014 too easy to break things otherwise.\n\nNo implementation work started.\n"},{"filename":"two-factor-auth.md","title":"Two-factor authentication (TOTP)","raw_status":"Shipped 2026-04-28","bucket":"Shipped","date":"2026-04-28","body":"# Two-factor authentication (TOTP)\n\n**Status:** Shipped 2026-04-28\n\n## Problem\n\nEmail/password auth has the usual problems: credential stuffing from leaked breaches elsewhere, weak password choices, phishing. 2FA mitigates all three with one mechanism users already understand from other apps.\n\n## Solution\n\nTOTP-based 2FA \u2014 the standard `otpauth://` URL + 30-second 6-digit code. Compatible with Google Authenticator, 1Password, Authy, etc.\n\nEnrollment flow:\n\n1. User goes to Settings \u2192 Security \u2192 \"Set up two-factor\"\n2. Server generates a 32-byte secret, encodes as an `otpauth://` URL, returns the QR code\n3. User scans with their authenticator app\n4. User enters the current 6-digit code to confirm\n5. Server verifies, stores the secret encrypted with the per-user key, marks 2FA enabled\n6. Recovery codes (8 single-use codes) generated and shown to the user (must be saved offline)\n\nLogin flow when 2FA is enabled:\n\n1. Email + password as today \u2192 server returns `{ \"status\": \"needs_2fa\", \"challenge_id\": \"...\" }`\n2. Client prompts for code \u2192 submits to `/api/auth/2fa/verify`\n3. Server verifies the TOTP code \u2192 returns JWT pair\n\n## Implementation\n\n- [x] Migration: `users.totp_secret_encrypted` + `users.recovery_codes_encrypted` \u2014 [#102](https://example.com/pull/102)\n- [x] Enrollment endpoint + QR generation \u2014 [#105](https://example.com/pull/105)\n- [x] Login flow with challenge step \u2014 [#108](https://example.com/pull/108)\n- [x] Recovery-code generation + single-use enforcement \u2014 [#110](https://example.com/pull/110)\n- [x] Settings UI for enroll/disable/regenerate-codes \u2014 [#114](https://example.com/pull/114)\n\n## Out of scope\n\nWebAuthn / passkeys. Strongly preferred by some power users but adds infrastructure (attestation handling) we don't have. Likely a v2 effort.\n"},{"filename":"user-registration.md","title":"User registration with email verification","raw_status":"Shipped 2026-02-14","bucket":"Shipped","date":"2026-02-14","body":"# User registration with email verification\n\n**Status:** Shipped 2026-02-14\n\n## Problem\n\nThe TodoApp launched with anonymous, browser-local storage. Synced multi-device usage requires accounts. We need a sign-up flow that's fast (email + password, no friction), verifies the email exists (so we can recover accounts later), and resists spam-bot signups.\n\n## Solution\n\nStandard email-verification flow:\n\n1. User submits `{ email, password }` to `POST /api/auth/register`\n2. Server creates a `users` row with `verified_at: NULL` and emails a one-time link\n3. User clicks the link \u2192 `GET /api/auth/verify?token=\u2026` \u2192 server sets `verified_at` and redirects to the app\n4. Unverified accounts can browse a sandbox view but can't sync across devices\n\nThe token is a 32-byte random value stored hashed in `email_verification_tokens`, expires after 24 hours.\n\n## Implementation\n\n- [x] Migration: `users` + `email_verification_tokens` tables \u2014 [#12](https://example.com/pull/12)\n- [x] Register + verify endpoints \u2014 [#15](https://example.com/pull/15)\n- [x] Email template + Postmark integration \u2014 [#16](https://example.com/pull/16)\n- [x] Frontend signup form + verification landing page \u2014 [#18](https://example.com/pull/18)\n\n## Risks & rollback\n\nPostmark outages block new registrations. Mitigation: queue emails locally and retry with exponential backoff (handled by Sidekiq). Existing users are unaffected. Rollback is a feature-flag flip (registration disabled, sign-in still works).\n"}]</script>
+<script src="https://cdn.jsdelivr.net/npm/marked@13.0.3/marked.min.js"></script>
+<script>
+  // SPECS/COUNTS/TOTAL start with embedded data (build mode) and get
+  // overwritten by /api/specs response in serve mode. `let` so init()
+  // can swap them out.
+  let SPECS = JSON.parse(document.getElementById('specs-data').textContent);
+  let COUNTS = {"Shipped": 7, "Draft": 3, "Closed": 1, "In progress": 3, "Abandoned": 1, "Planned": 2, "Superseded": 1};
+  let TOTAL = 18;
+
+  function applyMeta() {
+    document.getElementById('n-all').textContent = ` ${TOTAL}`;
+    for (const el of document.querySelectorAll('.chip .n')) {
+      if (el.id !== 'n-all') el.textContent = '';
+    }
+    for (const [bucket, n] of Object.entries(COUNTS)) {
+      const id = `n-${bucket.replace(/\s+/g, '')}`;
+      const el = document.getElementById(id);
+      if (el) el.textContent = ` ${n}`;
+    }
+    document.getElementById('meta-total').textContent = `${TOTAL} specs`;
+  }
+
+  async function loadFromServer() {
+    try {
+      const res = await fetch('/api/specs');
+      if (!res.ok) return false;
+      const data = await res.json();
+      SPECS = data.specs;
+      COUNTS = data.counts;
+      TOTAL = data.total;
+      const inputCode = document.querySelector('header .meta code');
+      if (inputCode && data.input_dir) inputCode.textContent = data.input_dir;
+      const gen = document.getElementById('meta-gen');
+      if (gen && data.generated_at) gen.textContent = data.generated_at;
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function startHeartbeat() {
+    // Keeps the server's idle-timeout watchdog from shutting down while a tab is open.
+    setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        fetch('/api/ping').catch(() => {});
+      }
+    }, 5 * 60 * 1000);
+  }
+
+  let filterBucket = '';
+  let searchQ = '';
+  let sortKey = 'date';
+  let sortDir = -1;
+  let selectedFile = null;
+
+  const rowsEl = document.getElementById('rows');
+  const readerEl = document.getElementById('reader');
+
+  function render() {
+    let list = SPECS.slice();
+    if (filterBucket) list = list.filter(s => s.bucket === filterBucket);
+    if (searchQ) {
+      const q = searchQ.toLowerCase();
+      list = list.filter(s =>
+        s.title.toLowerCase().includes(q) ||
+        s.filename.toLowerCase().includes(q)
+      );
+    }
+    list.sort((a, b) => {
+      const av = a[sortKey] || '';
+      const bv = b[sortKey] || '';
+      if (av < bv) return -1 * sortDir;
+      if (av > bv) return 1 * sortDir;
+      return 0;
+    });
+
+    if (!list.length) {
+      rowsEl.innerHTML = '<tr><td colspan="3" class="empty-row">No specs match.</td></tr>';
+      return;
+    }
+    rowsEl.innerHTML = list.map(s => `
+      <tr data-file="${escapeHtml(s.filename)}" class="${s.filename === selectedFile ? 'selected' : ''}">
+        <td>${escapeHtml(s.title)}</td>
+        <td><span class="status-badge status-${s.bucket.replace(/\s+/g, '')}">${escapeHtml(s.bucket)}${s.date ? ' ' + s.date : ''}</span></td>
+        <td>${escapeHtml(s.date || '—')}</td>
+      </tr>
+    `).join('');
+
+    for (const tr of rowsEl.querySelectorAll('tr')) {
+      tr.addEventListener('click', () => selectSpec(tr.dataset.file));
+    }
+  }
+
+  function selectSpec(filename) {
+    selectedFile = filename;
+    const spec = SPECS.find(s => s.filename === filename);
+    if (!spec) return;
+    readerEl.classList.remove('placeholder');
+    readerEl.innerHTML = `
+      <div class="reader-header">
+        <span class="status-badge status-${spec.bucket.replace(/\s+/g, '')}">${escapeHtml(spec.bucket)}${spec.date ? ' ' + spec.date : ''}</span>
+        <span class="file">${escapeHtml(spec.filename)}</span>
+      </div>
+      <div id="rendered"></div>
+    `;
+    document.getElementById('rendered').innerHTML = marked.parse(spec.body);
+    render();
+    document.querySelector('.reader-pane').scrollTop = 0;
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+  }
+
+  for (const chip of document.querySelectorAll('.chip')) {
+    chip.addEventListener('click', () => {
+      for (const c of document.querySelectorAll('.chip')) c.classList.remove('active');
+      chip.classList.add('active');
+      filterBucket = chip.dataset.bucket;
+      render();
+    });
+  }
+
+  document.getElementById('search').addEventListener('input', e => {
+    searchQ = e.target.value;
+    render();
+  });
+
+  for (const th of document.querySelectorAll('th[data-sort]')) {
+    th.addEventListener('click', () => {
+      const key = th.dataset.sort;
+      if (sortKey === key) sortDir = -sortDir;
+      else { sortKey = key; sortDir = key === 'date' ? -1 : 1; }
+      render();
+    });
+  }
+
+  function renderVelocity() {
+    const chart = document.getElementById('velocity-chart');
+    if (!chart) return;
+    const now = new Date();
+    const months = [];
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      months.push({ ym, label: d.toLocaleString('en', { month: 'short' }), count: 0 });
+    }
+    for (const s of SPECS) {
+      if (s.bucket !== 'Shipped' || !s.date) continue;
+      const m = months.find(x => x.ym === s.date.slice(0, 7));
+      if (m) m.count++;
+    }
+    const max = Math.max(1, ...months.map(m => m.count));
+    chart.innerHTML = months.map(m => `
+      <div class="velocity-col" data-empty="${m.count ? 0 : 1}" title="${m.ym}: ${m.count} shipped">
+        <div class="velocity-count">${m.count || ''}</div>
+        <div class="velocity-stem"><div class="velocity-fill" style="height: ${m.count ? (m.count / max * 100) : 6}%"></div></div>
+        <div class="velocity-label">${m.label}</div>
+      </div>
+    `).join('');
+  }
+
+  async function init() {
+    const live = await loadFromServer();
+    if (live) startHeartbeat();
+    applyMeta();
+    render();
+    renderVelocity();
+  }
+
+  init();
+</script>
+
+</body>
+</html>
