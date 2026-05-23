@@ -7,7 +7,7 @@ as a single-file HTML page (`build`) or directly from the terminal
 Examples:
 
     # Generate the HTML dashboard
-    python3 specs_dashboard.py build --input docs/specs --output dashboard.html
+    python3 specs_dashboard.py build --input docs/specs --output specs_dashboard.html
 
     # Terminal CLI
     python3 specs_dashboard.py list                              # All specs
@@ -318,8 +318,8 @@ def main(argv: list[str] | None = None) -> None:
     p_build.add_argument(
         "--output",
         type=Path,
-        default=Path("dashboard.html"),
-        help="Output HTML path (default: dashboard.html)",
+        default=Path("specs_dashboard.html"),
+        help="Output HTML path (default: specs_dashboard.html)",
     )
     p_build.add_argument(
         "--title",

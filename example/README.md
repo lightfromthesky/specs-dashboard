@@ -7,10 +7,10 @@ A sample project laid out the way a real project using specs-dashboard would loo
 ```
 example/
 ├── README.md          ← this file
-├── dashboard.html     ← pre-built, double-click to open
+├── specs_dashboard.html     ← pre-built, double-click to open
 ├── docs/
 │   └── specs/         ← 8 example specs covering every status bucket
-└── rebuild.sh         ← one-liner to regenerate dashboard.html from specs/
+└── rebuild.sh         ← one-liner to regenerate specs_dashboard.html from specs/
 ```
 
 The 16 specs describe a fictional TodoApp's design history — shipped features, in-flight work, drafts, an abandoned approach, a closed (shipped-then-reverted) experiment, and a superseded design. They're written to feel like real specs from a small-to-mid engineering team.
@@ -20,7 +20,7 @@ The 16 specs describe a fictional TodoApp's design history — shipped features,
 From this directory:
 
 ```
-open dashboard.html
+open specs_dashboard.html
 ```
 
 The browser opens the dashboard with all 8 specs loaded. Click the status chips at the top to filter; click any row to read that spec inline on the right.
@@ -36,7 +36,7 @@ If you edit any spec under `docs/specs/`, regenerate the dashboard:
 Or use the tool directly:
 
 ```
-python3 ../specs_dashboard.py build --title "TodoApp specs" --output dashboard.html
+python3 ../specs_dashboard.py build --title "TodoApp specs" --output specs_dashboard.html
 ```
 
 (`--input` is autodetected — the tool finds `docs/specs/` in the current directory automatically.)

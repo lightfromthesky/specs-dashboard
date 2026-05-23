@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.0] — 2026-05-23
+
+### Breaking
+
+- **`--output` default renamed** from `dashboard.html` to `specs_dashboard.html`. Matches the generator filename for self-consistency, especially when the tool is vendored into a folder named `specs-dashboard/` (where the generic `dashboard.html` artifact sat awkwardly next to the more specific `specs_dashboard.py` script).
+- **Migration**: if you have CI / scripts / docs that reference the old `dashboard.html` artifact, either (a) pass `--output dashboard.html` explicitly to preserve the old behavior, or (b) rename your committed output file + update the references to `specs_dashboard.html`. The latter is recommended for new integrations.
+
+### Docs
+
+- README, `example/`, `demo/`, `CONTRIBUTING.md` — all `dashboard.html` references updated to `specs_dashboard.html`.
+- `example/dashboard.html` renamed to `example/specs_dashboard.html` and regenerated.
+
 ## [1.0.0] — 2026-05-22
 
 Initial public release.

@@ -33,7 +33,7 @@ Clone, edit `specs_dashboard.py`, then run the example to test changes:
 ```
 cd example
 ./rebuild.sh
-open dashboard.html
+open specs_dashboard.html
 ```
 
 ## Support level

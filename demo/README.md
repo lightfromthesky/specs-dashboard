@@ -20,7 +20,7 @@ brew install vhs
 
 There's no scripted equivalent for the browser. Suggested workflow:
 
-1. Open `../example/dashboard.html` in your browser
+1. Open `../example/specs_dashboard.html` in your browser
 2. Launch Kap (`brew install --cask kap`) → Record selected area → frame the browser window
 3. Walk through the demo storyboard:
    - Click "In progress" chip → list narrows

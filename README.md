@@ -25,7 +25,7 @@ Try it yourself — a sample project lives in [`example/`](example/):
 
 ```
 cd example
-open dashboard.html
+open specs_dashboard.html
 ```
 
 The browser opens the pre-built dashboard with 16 example specs covering every status bucket. Click chips, click rows, search — works without any setup.
@@ -47,14 +47,14 @@ Then expose it via whatever script runner your project already uses.
 **Makefile** (works for any project — Python, Java, Go, Rust, etc.):
 ```Makefile
 specs:
-	@python3 tools/specs-dashboard/specs.py build && open dashboard.html
+	@python3 tools/specs-dashboard/specs.py build && open specs_dashboard.html
 ```
 
 **Node / JavaScript** (`package.json`):
 ```json
 {
   "scripts": {
-    "specs": "python3 tools/specs-dashboard/specs.py build && open dashboard.html"
+    "specs": "python3 tools/specs-dashboard/specs.py build && open specs_dashboard.html"
   }
 }
 ```
@@ -120,13 +120,13 @@ Set up specs-dashboard in this repo:
    build.gradle / justfile) and add a 'specs' target/task that runs
    `python3 tools/specs-dashboard/specs.py build`.
 
-3. Add dashboard.html to .gitignore.
+3. Add specs_dashboard.html to .gitignore.
 
 4. If neither docs/specs/ nor specs/ exists, create docs/specs/ and add
    a starter spec with a "**Status:** Draft" line below the title.
 
 5. Run the integration (make specs / npm run specs / etc.) and verify
-   dashboard.html is generated.
+   specs_dashboard.html is generated.
 ```
 
 Confirmed compatible with: Claude Code, Cursor, Aider, Continue, Cline.
@@ -155,7 +155,7 @@ Commit `tools/specs-dashboard/specs.py`.
 | `justfile` | A `specs:` recipe running `python3 tools/specs-dashboard/specs.py build` |
 | None of the above | Create a `Makefile` with the snippet above |
 
-### 3. Add `dashboard.html` to `.gitignore`
+### 3. Add `specs_dashboard.html` to `.gitignore`
 
 The generated HTML is a build artifact — do not commit it.
 
@@ -165,12 +165,12 @@ If neither `docs/specs/` nor `specs/` exists, create `docs/specs/` and add a sta
 
 ### 5. Verify
 
-Run the integration (`make specs` / `npm run specs` / `./gradlew specs`) and confirm `dashboard.html` is generated.
+Run the integration (`make specs` / `npm run specs` / `./gradlew specs`) and confirm `specs_dashboard.html` is generated.
 
 ### Don't
 
 - Don't add specs-dashboard as a `pip install` / `package.json` dependency — vendor it.
-- Don't commit the generated `dashboard.html`.
+- Don't commit the generated `specs_dashboard.html`.
 - Don't invent custom status values — use the canonical six from the convention section.
 
 ## Spec-driven development for AI-agent-friendly codebases
@@ -245,18 +245,18 @@ Pass `--no-legacy-aliases` to disable.
 python3 specs_dashboard.py build
 ```
 
-Looks for `docs/specs/` then `specs/`, walking up parent directories from the current working directory until it finds one or hits a `.git` boundary. So running from a subfolder (e.g. `tools/specs-dashboard/`) still finds the specs at the repo root. Output goes to `dashboard.html` in the current directory by default.
+Looks for `docs/specs/` then `specs/`, walking up parent directories from the current working directory until it finds one or hits a `.git` boundary. So running from a subfolder (e.g. `tools/specs-dashboard/`) still finds the specs at the repo root. Output goes to `specs_dashboard.html` in the current directory by default.
 
 Explicit paths and titles:
 
 ```
-python3 specs_dashboard.py build --input ./docs/specs --output ./dashboard.html --title "My project specs" --exclude SPEC_TEMPLATE.md
+python3 specs_dashboard.py build --input ./docs/specs --output ./specs_dashboard.html --title "My project specs" --exclude SPEC_TEMPLATE.md
 ```
 
 Open the result:
 
 ```
-open dashboard.html
+open specs_dashboard.html
 ```
 
 ### Terminal CLI
@@ -303,7 +303,7 @@ python3 specs_dashboard.py counts --json
 | `--input PATH` | all | Spec directory (autodetected from `docs/specs/` then `specs/`) |
 | `--exclude FILENAME` | all | Skip this filename (repeatable) |
 | `--no-legacy-aliases` | all | Treat `Completed`/`Live`/`Pending` as Unknown |
-| `--output PATH` | `build` | HTML output path (default: `dashboard.html`) |
+| `--output PATH` | `build` | HTML output path (default: `specs_dashboard.html`) |
 | `--title TEXT` | `build` | Page title |
 | `--status BUCKET` | `list` | Filter to one bucket (case-insensitive) |
 | `--body` | `search` | Also match against spec body |
@@ -317,13 +317,13 @@ Wire `build` into a git pre-commit hook or CI step:
 ```
 # .git/hooks/pre-commit
 python3 specs_dashboard.py build
-git add dashboard.html
+git add specs_dashboard.html
 ```
 
 ```yaml
 # .github/workflows/specs-dashboard.yml
 - run: python3 specs_dashboard.py build
-- run: git diff --exit-code dashboard.html   # fails if stale
+- run: git diff --exit-code specs_dashboard.html   # fails if stale
 ```
 
 ## Implementation notes
