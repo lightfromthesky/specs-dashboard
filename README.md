@@ -127,6 +127,15 @@ Set up specs-dashboard in this repo:
 
 5. Run the integration (make specs / npm run specs / etc.) and verify
    specs_dashboard.html is generated.
+
+6. Wire the behavioral instruction so future agent runs query specs via
+   the CLI instead of grepping. Detect the agent config file and append
+   the "Querying specs" snippet from the README's "Agent install
+   protocol" → "Step 6" section:
+   - CLAUDE.md exists at repo root → append there (Claude Code)
+   - .cursor/rules/ directory exists → create .cursor/rules/specs.mdc
+   - AGENTS.md exists → append there (Aider / generic)
+   - None of the above → create CLAUDE.md with the snippet
 ```
 
 Confirmed compatible with: Claude Code, Cursor, Aider, Continue, Cline.
@@ -166,6 +175,44 @@ If neither `docs/specs/` nor `specs/` exists, create `docs/specs/` and add a sta
 ### 5. Verify
 
 Run the integration (`make specs` / `npm run specs` / `./gradlew specs`) and confirm `specs_dashboard.html` is generated.
+
+### 6. Wire the behavioral instruction
+
+Without this step, the agent has the tool installed but doesn't know to use it — it will keep defaulting to `ls docs/specs/` + grep + Read on every spec question. Pick the file that matches the user's agent and append (or create) it:
+
+| Agent | File | Action |
+|---|---|---|
+| Claude Code | `CLAUDE.md` (repo root) | Append the snippet below |
+| Cursor | `.cursor/rules/specs.mdc` | Create with the snippet (Cursor reads all `.mdc` rules in this dir) |
+| Cursor (legacy) | `.cursorrules` | Append the snippet |
+| Aider / generic | `AGENTS.md` (repo root) | Append the snippet |
+| None of the above | `CLAUDE.md` (repo root) | Create with the snippet |
+
+Snippet to append:
+
+```md
+## Querying specs
+
+When investigating `docs/specs/` (or wherever the spec tree lives), use
+the specs-dashboard CLI instead of `ls` / `grep` / Read-each-file:
+
+- `python3 tools/specs-dashboard/specs_dashboard.py counts` — bucket
+  breakdown across Shipped / In progress / Draft / Planned / Closed /
+  Abandoned / Superseded. Run this first to know the shape.
+- `python3 tools/specs-dashboard/specs_dashboard.py list --status "In progress"` —
+  filter to one bucket. Status names are case-insensitive.
+- `python3 tools/specs-dashboard/specs_dashboard.py search KEYWORD` —
+  find specs by name/title. Add `--body` to also search content.
+- `python3 tools/specs-dashboard/specs_dashboard.py show NAME` — render
+  one spec to stdout (use only when full content is needed).
+- Add `--json` to `list` and `counts` for structured output.
+
+Do NOT grep or `ls + Read` `docs/specs/*.md` when answering questions
+about spec status, scope, or what's in flight. The CLI is the contract
+— the same `**Status:**` line a human skims is what the dashboard reads.
+```
+
+If the user's specs live somewhere other than `docs/specs/`, also note the `--input PATH` flag in the snippet so the agent knows to pass it.
 
 ### Don't
 
